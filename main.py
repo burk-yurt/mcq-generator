@@ -1,11 +1,3 @@
-from flask import Flask, request, jsonify
-import openai
-import os
-import json
-
-app = Flask(__name__)
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 @app.route("/generate-mcqs", methods=["POST"])
 def generate_mcqs():
     data = request.json
@@ -14,7 +6,10 @@ def generate_mcqs():
 
     all_activities = []
 
+    print("🚀 Starting MCQ generation for:", len(valid_objectives), "objectives")
+
     for lo in valid_objectives:
+        print("🎯 Generating for LO:", lo['id'])
         prompt = f"""
 Generate 3 to 5 multiple choice questions aligned with this learning objective:
 
@@ -50,22 +45,18 @@ Return ONLY a JSON array of activities. No commentary.
                 temperature=0.5
             )
             content = response.choices[0].message["content"]
-            print("🧠 GPT raw response:", content)
+            print("🧠 GPT raw response:\n", content)
 
             try:
                 cleaned = content.replace("```json", "").replace("```", "").strip()
                 activities = json.loads(cleaned)
                 all_activities.extend(activities)
-            except Exception as e:
-                print("❌ Failed to parse GPT content:", e)
-                print("📦 GPT response before parsing:", content)
+            except Exception as parse_err:
+                print("❌ Failed to parse GPT content:", parse_err)
+                print("📦 GPT response before parsing:\n", content)
 
-        except Exception as e:
-            print("❌ GPT call failed completely:", e)
+        except Exception as gpt_err:
+            print("❌ GPT call failed completely:", gpt_err)
 
+    print("✅ Returning", len(all_activities), "activities")
     return jsonify({"activities": all_activities})
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)

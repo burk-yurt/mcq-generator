@@ -3,7 +3,6 @@
 from flask import Flask, request, jsonify
 import openai
 import os
-import re
 import json
 
 app = Flask(__name__)
@@ -53,17 +52,20 @@ Return ONLY a JSON array of activities. No commentary.
                 temperature=0.5
             )
             content = response.choices[0].message["content"]
-            match = re.search(r"\[.*\]", content, re.DOTALL)
-            if match:
-                activities = json.loads(match.group())
+            print("GPT raw response:", content)  # 🐞 debug line
+
+            try:
+                cleaned = content.strip().strip("```json").strip("```")
+                activities = json.loads(cleaned)
                 all_activities.extend(activities)
+            except Exception as e:
+                print("❌ Failed to parse GPT response:", e)
+
         except Exception as e:
-            print("Error with GPT:", e)
+            print("❌ GPT error:", e)
 
     return jsonify({"activities": all_activities})
 
-import os
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # use Render's PORT or fallback to 5000 locally
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)

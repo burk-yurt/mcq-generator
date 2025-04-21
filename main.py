@@ -60,5 +60,8 @@ Return ONLY a JSON array of activities. No commentary.
 
     return jsonify({"activities": all_activities})
 
+import os
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # use Render's PORT or fallback to 5000 locally
+    app.run(host="0.0.0.0", port=port, debug=True)

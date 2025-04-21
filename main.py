@@ -55,7 +55,7 @@ Return ONLY a JSON array of activities. No commentary.
 
         try:
             response = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are an instructional assistant who creates multiple choice questions from course objectives."},
                     {"role": "user", "content": prompt}

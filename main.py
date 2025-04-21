@@ -1,15 +1,17 @@
-# Deployed version for Render with debug logging
+# Deployed version for Render with OpenAI v1.0+ support and full debug logging
 import os
 import sys
 import json
 import openai
 from flask import Flask, request, jsonify
 
-# Force all print() to flush immediately to logs
+# Force print() logs to show up in Render
 sys.stdout.reconfigure(line_buffering=True)
 
+# Initialize OpenAI client (v1.0+ syntax)
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 app = Flask(__name__)
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/generate-mcqs", methods=["POST"])
 def generate_mcqs():
@@ -52,7 +54,7 @@ Return ONLY a JSON array of activities. No commentary.
 """
 
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are an instructional assistant who creates multiple choice questions from course objectives."},
@@ -60,7 +62,7 @@ Return ONLY a JSON array of activities. No commentary.
                 ],
                 temperature=0.5
             )
-            content = response.choices[0].message["content"]
+            content = response.choices[0].message.content
             print("🧠 GPT raw response:\n", content)
 
             try:

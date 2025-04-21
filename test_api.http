@@ -1,0 +1,13 @@
+POST http://127.0.0.1:5000/generate-mcqs
+Content-Type: application/json
+
+{
+  "learningObjectives": [
+    {
+      "id": "Intro",
+      "title": "Define the characteristics of a market economy.",
+      "bloomLevel": 1,
+      "knowledgeType": "factual"
+    }
+  ]
+}

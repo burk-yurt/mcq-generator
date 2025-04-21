@@ -1,5 +1,3 @@
-# Deployed version for Render
-
 from flask import Flask, request, jsonify
 import openai
 import os
@@ -52,19 +50,21 @@ Return ONLY a JSON array of activities. No commentary.
                 temperature=0.5
             )
             content = response.choices[0].message["content"]
-            print("GPT raw response:", content)  # 🐞 debug line
+            print("🧠 GPT raw response:", content)
 
             try:
-                cleaned = content.strip().strip("```json").strip("```")
+                cleaned = content.replace("```json", "").replace("```", "").strip()
                 activities = json.loads(cleaned)
                 all_activities.extend(activities)
             except Exception as e:
-                print("❌ Failed to parse GPT response:", e)
+                print("❌ Failed to parse GPT content:", e)
+                print("📦 GPT response before parsing:", content)
 
         except Exception as e:
-            print("❌ GPT error:", e)
+            print("❌ GPT call failed completely:", e)
 
     return jsonify({"activities": all_activities})
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

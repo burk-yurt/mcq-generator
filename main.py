@@ -1,15 +1,31 @@
+# Deployed version for Render with debug logging
+import os
+import sys
+import json
+import openai
+from flask import Flask, request, jsonify
+
+# Force all print() to flush immediately to logs
+sys.stdout.reconfigure(line_buffering=True)
+
+app = Flask(__name__)
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 @app.route("/generate-mcqs", methods=["POST"])
 def generate_mcqs():
-    data = request.json
-    learning_objectives = data.get("learningObjectives", [])
-    valid_objectives = [lo for lo in learning_objectives if lo["bloomLevel"] in [1, 2, 3]]
+    print("🔥 Received POST to /generate-mcqs")
 
+    data = request.json
+    print("📦 Request data:", data)
+
+    learning_objectives = data.get("learningObjectives", [])
+    print("🎯 Number of objectives:", len(learning_objectives))
+
+    valid_objectives = [lo for lo in learning_objectives if lo["bloomLevel"] in [1, 2, 3]]
     all_activities = []
 
-    print("🚀 Starting MCQ generation for:", len(valid_objectives), "objectives")
-
     for lo in valid_objectives:
-        print("🎯 Generating for LO:", lo['id'])
+        print("📝 Processing:", lo["id"])
         prompt = f"""
 Generate 3 to 5 multiple choice questions aligned with this learning objective:
 
@@ -51,12 +67,18 @@ Return ONLY a JSON array of activities. No commentary.
                 cleaned = content.replace("```json", "").replace("```", "").strip()
                 activities = json.loads(cleaned)
                 all_activities.extend(activities)
+                print(f"✅ Parsed {len(activities)} activities")
             except Exception as parse_err:
-                print("❌ Failed to parse GPT content:", parse_err)
-                print("📦 GPT response before parsing:\n", content)
+                print("❌ Failed to parse GPT response:", parse_err)
+                print("📦 Unparsed GPT content:\n", content)
 
         except Exception as gpt_err:
-            print("❌ GPT call failed completely:", gpt_err)
+            print("❌ GPT call failed:", gpt_err)
 
-    print("✅ Returning", len(all_activities), "activities")
+    print(f"📤 Returning {len(all_activities)} activities to client")
     return jsonify({"activities": all_activities})
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)

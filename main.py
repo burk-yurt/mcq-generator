@@ -1,3 +1,5 @@
+# Deployed version for Render
+
 from flask import Flask, request, jsonify
 import openai
 import os
